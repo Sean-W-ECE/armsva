@@ -441,9 +441,9 @@ void
 sva_load_lif (unsigned int enable)
 {
   if (enable)
-    __asm__ __volatile__ ("sti":::"memory");
+    __asm__ __volatile__ ("CPSIE if");
   else
-    __asm__ __volatile__ ("cli":::"memory");
+    __asm__ __volatile__ ("CPSID if");
 }
                                                                                 
 /*
@@ -452,6 +452,12 @@ sva_load_lif (unsigned int enable)
  * Description:
  *  Return whether interrupts are currently enabled or disabled on the
  *  local processor.
+ * 
+ * Outputs:
+ * 0 - IRQ and FIQ enabled
+ * 1 - IRQ enabled, FIQ masked
+ * 2 - IRQ masked, FIQ enabled
+ * 3 - IRQ and FIQ masked
  */
 unsigned int
 sva_save_lif (void)
@@ -459,11 +465,13 @@ sva_save_lif (void)
   unsigned int eflags;
 
   /*
-   * Get the entire eflags register and then mask out the interrupt enable
-   * flag.
+   * Get the entire cpsr register and then mask out the IRQ/FIQ enable
+   * flags.
    */
-  __asm__ __volatile__ ("pushf; popl %0\n" : "=r" (eflags));
-  return (eflags & 0x00000200);
+  //__asm__ __volatile__ ("pushf; popl %0\n" : "=r" (eflags));
+  __asm__ __volatile__ ("MRS %[reg], %%cpsr\n\t" : [reg] "=r" (eflags));
+  eflags = eflags & 0x000000C0;
+  return eflags >> 6;
 }
 
 unsigned int
