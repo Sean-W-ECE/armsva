@@ -1358,13 +1358,14 @@ sva_mm_load_pgtable (void * pg) {
   /*
    * Load the new page table and enable paging in the CR0 register.
    */
+  #if 0
   __asm__ __volatile__ ("movq %1, %%cr3\n"
                         "movl %%cr0, %0\n"
                         "orl  $0x80000000, %0\n"
                         "movl %0, %%cr0\n"
                         : "=r" (cr0)
           : "r" (pg) : "memory");
-    
+  #endif
   /*
    * Ensure that the secure memory region is still mapped within the current
    * set of page tables.

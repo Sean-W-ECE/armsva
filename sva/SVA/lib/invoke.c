@@ -168,6 +168,7 @@ sva_invokestrncpy (char * dst, const char * src, uintptr_t count) {
   cpup->gip = &frame;
 
   /* Perform the strncpy */
+  #if 0
   __asm__ __volatile__(
     " movq $2f, %5\n"
     "0: lodsb\n"
@@ -185,7 +186,7 @@ sva_invokestrncpy (char * dst, const char * src, uintptr_t count) {
       "=&D" (__d2), "=m" (frame.rbx)
     : "i"(0), "0"(count), "1"(count), "3"(src), "4"(dst)
     : "memory");
-
+  #endif
   /*
    * Pop off the invoke frame.
    */

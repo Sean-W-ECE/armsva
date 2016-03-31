@@ -12,6 +12,9 @@
  * the destination operand is second.
  *
  *===----------------------------------------------------------------------===
+ *
+ * For the ARMv7 port, this needs to be completely rewritten.
+ *
  */
 
 #include <sva/cfi.h>

@@ -254,9 +254,11 @@ fptrap (void) {
    * Turn off the TS bit in CR0; this allows the FPU to proceed with floating
    * point operations.
    */
+  #if 0
   __asm__ __volatile__ ("movl %%cr0, %0\n"
                         "andl  %1,  %0\n"
                         "movl %0, %%cr0\n" : "=&r" (cr0) : "r" (~(ts)));
+  #endif
   return;
 }
 
@@ -273,8 +275,10 @@ init_procID (void) {
    * Use the CPUID instruction to get a local APIC2 ID for the processor.
    */
   unsigned int apicID;
+  #if 0
   __asm__ __volatile__ ("movl $0xB, %%eax\ncpuid" : "=d" (apicID));
-
+  #endif
+  
   /*
    * Find an available processor ID and use that.
    */
@@ -336,7 +340,9 @@ init_idt (unsigned int procID) {
    */
   sva_idtreg.rd_limit = sizeof (sva_idt);
   sva_idtreg.rd_base = (uintptr_t) &(sva_idt[0]);
+  #if 0
   __asm__ __volatile__ ("lidt (%0)" : : "r" (&sva_idtreg));
+  #endif
   idt = (void *) sva_idtreg.rd_base;
 
   return;
@@ -346,6 +352,7 @@ init_idt (unsigned int procID) {
 static void
 init_debug (void)
 {
+  #if 0
   __asm__ ("movl $0, %eax\n"
            "movl %eax, %db0\n"
            "movl %eax, %db1\n"
@@ -353,6 +360,7 @@ init_debug (void)
            "movl %eax, %db3\n"
            "movl %eax, %db6\n"
            "movl %eax, %db7\n");
+  #endif
   return;
 }
 
@@ -387,6 +395,7 @@ init_mmu (void)
    * We will assume that page size extensions and page global bit extensions
    * exist within the processor.  If they don't, you're in big trouble!
    */
+  #if 0
   __asm__ __volatile__ ("mov %%cr4, %0\n"
                         "orl  %1, %0\n"
                         "andl %2, %0\n"
@@ -394,7 +403,7 @@ init_mmu (void)
                         : "=&r" (value)
                         : "r" (osfxr | pse | pge | pce),
                           "r" (~(pvi | de | tsd)));
-
+  #endif
   return;
 }
 #endif
@@ -416,6 +425,7 @@ init_fpu () {
    * Configure the processor so that the first use of the FPU generates an
    * exception.
    */
+  #if 0
   __asm__ __volatile__ ("mov %%cr0, %0\n"
                         "and  %1, %0\n"
                         "or   %2, %0\n"
@@ -423,7 +433,7 @@ init_fpu () {
                         : "=&r" (cr0)
                         : "r" (~(em)),
                           "r" (mp | ts));
-
+  #endif
   /*
    * Register the co-processor trap so that we know when an FP operation has
    * been performed.

@@ -305,7 +305,9 @@ sva_print_ist3 (unsigned long id) {
   struct CPUState * cpup = getCPUState();
   printf ("SVA: %d: ist3 = %p: %lx\n", id, &(cpup->tssp->ist3), cpup->tssp->ist3);
   if (cpup->tssp->ist3 == 0) {
+    #if 0
     __asm__ __volatile__ ("xchg %%bx, %%bx\n" :: "a" (id));
+    #endif
   }
   return;
 }
@@ -331,7 +333,9 @@ sva_checkptr (uintptr_t p) {
   if (p >= 0xffffff8000000000) {
     if (!(p & 0x0000008000000000u)) {
       bochsBreak();
+      #if 0
       __asm__ __volatile__ ("int $3\n");
+      #endif
     }
   }
 

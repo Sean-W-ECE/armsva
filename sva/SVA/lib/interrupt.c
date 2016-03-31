@@ -39,7 +39,8 @@ default_interrupt (unsigned int number, uintptr_t address) {
 #if 1
   printf ("SVA: default interrupt handler: %d %d\n", number, address);
 #else
-  __asm__ __volatile__ ("hlt");
+  //removed x86 ASM
+  panic ("SVA: Not implemented");
 #endif
   return;
 }
@@ -61,7 +62,7 @@ invalidIC (unsigned int v) {
     sva_print_icontext ("invalidIC:sys");
 
   panic ("SVA: Invalid Interrupt Context\n");
-  __asm__ __volatile__ ("hlt\n");
+  //removed x86 ASM
   return;
 }
 
@@ -99,8 +100,7 @@ init_threads(void) {
 static inline uintptr_t
 randomNumber (void) {
   uintptr_t rand;
-  __asm__ __volatile__ ("1: rdrand %0\n"
-                        "jae 1\n" : "=r" (rand));
+  //removed x86 ASM
   return rand;
 }
 
@@ -340,7 +340,7 @@ sva_register_general_exception (unsigned char number,
    */
 #if 0
   if (number > 31) {
-    __asm__ __volatile__ ("int %0\n" :: "i" (sva_exception_exception));
+    //removed x86 ASM
     return 1;
   }
 
@@ -352,7 +352,7 @@ sva_register_general_exception (unsigned char number,
     case 10:
     case 11:
     case 12:
-      __asm__ __volatile__ ("int %0\n" :: "i" (sva_exception_exception));
+      //removed x86 ASM
       return 1;
       break;
 
@@ -391,7 +391,7 @@ sva_register_memory_exception (unsigned char number, memfault_handler_t handler)
       return 0;
 
     default:
-      __asm__ __volatile__ ("int %0\n" :: "i" (sva_exception_exception));
+      //removed x86 ASM
       return 1;
   }
 #endif
@@ -412,7 +412,7 @@ sva_register_interrupt (unsigned char number, interrupt_handler_t interrupt) {
    */
 #if 0
   if (number < 32) {
-    __asm__ __volatile__ ("int %0\n" :: "i" (sva_interrupt_exception));
+    //removed x86 ASM
     return 1;
   }
 #endif
@@ -468,7 +468,6 @@ sva_save_lif (void)
    * Get the entire cpsr register and then mask out the IRQ/FIQ enable
    * flags.
    */
-  //__asm__ __volatile__ ("pushf; popl %0\n" : "=r" (eflags));
   __asm__ __volatile__ ("MRS %[reg], %%cpsr\n\t" : [reg] "=r" (eflags));
   eflags = eflags & 0x000000C0;
   return eflags >> 6;
@@ -497,12 +496,12 @@ sva_icontext_lif (void * icontextp)
 void
 sva_nop (void)
 {
-  __asm__ __volatile__ ("nop" ::: "memory");
+  
 }
 
 void
 sva_nop1 (void)
 {
-  __asm__ __volatile__ ("nop" ::: "memory");
+  
 }
 #endif

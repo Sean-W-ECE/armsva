@@ -12,6 +12,9 @@
  * the destination operand is second.
  *
  *===----------------------------------------------------------------------===
+ *
+ * For the ARMv7 port, this must be completely rewritten
+ *
  */
 
 #include "offsets.h"

@@ -40,7 +40,9 @@ load_fp (sva_fp_state_t * buffer) {
    * Save the state of the floating point unit.
    */
   if (buffer->present)
+    #if 0
     __asm__ __volatile__ ("fxrstor %0" : "=m" (buffer->words));
+  #endif
   return;
 }
 
@@ -56,7 +58,9 @@ load_fp (sva_fp_state_t * buffer) {
  */
 static inline void
 save_fp (sva_fp_state_t * buffer) {
+  #if 0
   __asm__ __volatile__ ("fxsave %0" : "=m" (buffer->words) :: "memory");
+  #endif
   buffer->present = 1;
 }
 
@@ -346,7 +350,9 @@ checkIntegerForLoad (sva_integer_state_t * p) {
 
 #if 0
   /* Disable interrupts */
+  #if 0
   __asm__ __volatile__ ("cli");
+  #endif
 #endif
 
 #if 0
@@ -387,7 +393,9 @@ checkIntegerForLoad (sva_integer_state_t * p) {
     /*
      * Grab the current code segment.
      */
+    #if 0
     __asm__ __volatile__ ("movl %%cs, %0\n" : "=r" (cs));
+    #endif
     cs &= 0xffff;
 
     /*
@@ -395,7 +403,9 @@ checkIntegerForLoad (sva_integer_state_t * p) {
      * buffer was saved, then generate an exception.
      */
     if (cs != (p->cs)) {
+      #if 0
       __asm__ __volatile__ ("int %0\n" :: "i" (sva_state_exception));
+      #endif
       continue;
     }
 
@@ -435,12 +445,14 @@ flushSecureMemory (struct SVAThread * threadp) {
    * switch, we just flushed all the TLBs anyway by changing CR3.  Therefore,
    * we lose speed by not flushing everything again.
    */
+  #if 0
   __asm__ __volatile__ ("movq %cr4, %rax\n"
                         "movq %cr4, %rcx\n"
                         "orq $0x20000, %rax\n"
                         "andq $0xfffffffffffdffff, %rcx\n"
                         "movq %rax, %cr4\n"
                         "movq %rcx, %cr4\n");
+  #endif
   return;
 }
 
@@ -561,7 +573,9 @@ sva_swap_integer (uintptr_t newint, uintptr_t * statep) {
      * Save the CR3 register.  We'll need it later for sva_release_stack().
      */
     uintptr_t cr3;
+    #if 0
     __asm__ __volatile__ ("movq %%cr3, %0\n" : "=r" (cr3));
+    #endif
     old->cr3 = cr3;
 
     /*
