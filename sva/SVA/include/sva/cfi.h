@@ -23,6 +23,7 @@
 /* Labels used in comparisons: This includes the prefetchnta portion */
 #define CHECKLABEL 0x48c98948
 
+#if 0
 /* Macro for call */
 #define CALLQ(x) callq x ; \
                  movq %rcx,%rcx ; \
@@ -53,5 +54,6 @@
               xchg %bx, %bx ; \
               23: movq $0xfea, %rax;
 
+#endif //end the if 0
 #endif
               /* addq  $0x8, %rcx ; \ */

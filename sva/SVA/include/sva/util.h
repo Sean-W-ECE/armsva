@@ -61,11 +61,10 @@ sva_check_memory_write (void * memory, unsigned int size) {
  */
 static inline unsigned long
 sva_enter_critical (void) {
-  unsigned long rflags;
-  __asm__ __volatile__ ("pushfq\n"
-                        "popq %0\n"
-                        "cli\n" : "=r" (rflags));
-  return rflags;
+  unsigned long cpsr;
+  __asm__ __volatile__ ("MRS %[reg], %%cpsr\n\t"
+                        "CPSID if\n\t" : [reg] "=r" (cpsr));
+  return cpsr;
 }
 
 /*
@@ -77,9 +76,9 @@ sva_enter_critical (void) {
  *  executed.
  */
 static inline void
-sva_exit_critical (unsigned long rflags) {
-  if (rflags & 0x00000200)
-    __asm__ __volatile__ ("sti":::"memory");
+sva_exit_critical (unsigned long cpsr) {
+  if (cpsr & 0x000000C0)
+    __asm__ __volatile__ ("CPSIE if":::"memory");
   return;
 }
 
@@ -104,11 +103,14 @@ isNotWithinSecureMemory (void * p) {
     return 1;
 }
 
+  //for arm port, not sure what to do yet, so disable
+  #if 0
 static inline void
 bochsBreak (void) {
   __asm__ __volatile__ ("xchg %bx, %bx\n");
   return;
 }
+  #endif
 
 #ifdef __cplusplus
 }
