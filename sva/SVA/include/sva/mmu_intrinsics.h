@@ -101,10 +101,11 @@ extern void * sva_translate(void * entryPoint);
 static inline void *
 sva_mm_save_pgtable (void)
 {
-  void * p;
+  void * p = NULL;
+  #if 0
   __asm__ __volatile__ ("movq %%cr3, %0\n" : "=r" (p));
-  
-  return p;
+  #endif
+  return p; //TODO
 }
 
 /*
@@ -123,7 +124,9 @@ sva_mm_save_pgtable (void)
  */
 static inline void
 sva_mm_flush_tlb (void * address) {
+  #if 0
   __asm__ __volatile__ ("invlpg %0" : : "m" (*((char *)address)) : "memory");
+  #endif
   return;
 }
 

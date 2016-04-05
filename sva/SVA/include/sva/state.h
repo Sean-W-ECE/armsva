@@ -310,8 +310,10 @@ getCPUState(void) {
    * this processor.
    */
   struct CPUState * cpustate;
+  #if 0
   __asm__ __volatile__ ("movq %%gs:0x260, %0\n" : "=r" (cpustate));
-  return cpustate;
+  #endif
+  return cpustate; //TODO
 }
 
 /*
@@ -340,18 +342,20 @@ sva_was_privileged (void) {
    * the SVA instrumentation from preventing us from reading the data.
    */
   sva_icontext_t * currentIC;
+  #if 0
   __asm__ __volatile__ ("movq %1, %0\n"
                        : "=r" (currentIC)
                        : "m" ((cpup->newCurrentIC)));
-  
+  #endif
   /*
    * Get the code segment out of the interrupt context.
    */
   uintptr_t cs;
+  #if 0
   __asm__ __volatile__ ("movq %1, %0\n"
                        : "=r" (cs)
                        : "m" ((currentIC->cs)));
-
+  #endif
   /*
    * Lookup the most recent interrupt context for this processor and see
    * if it's code segment has the user-mode segment bits turned on.  Apparently

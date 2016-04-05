@@ -26,8 +26,10 @@ static inline void
 sva_get_key (unsigned char * keyp) {
   uintptr_t rax;
   uintptr_t rdx;
+  #if 0
   __asm__ __volatile__ ("int $0x7c\n"
                         : "=a" (rax), "=d" (rdx));
+  #endif
   *((uintptr_t *)(keyp)) = rax;
   *((uintptr_t *)(keyp + 8)) = rdx;
   return;

@@ -309,8 +309,9 @@ get_pagetable (void) {
   uintptr_t cr3;
 
   /* Get the page table value out of CR3 */
+  #if 0
   __asm__ __volatile__ ("movq %%cr3, %0\n" : "=r" (cr3));
-
+  #endif
   /*
    * Shift the value over 12 bits.  The lower-order 12 bits of the page table
    * pointer are assumed to be zero, and so they are reserved or used by the
@@ -330,9 +331,11 @@ static inline uint64_t
 rdmsr(u_int msr)
 {
     uint32_t low, high;
-
+    #if 0
     __asm __volatile("rdmsr" : "=a" (low), "=d" (high) : "c" (msr));
     return (low | ((uint64_t)high << 32));
+    #endif
+    return 0; //TODO: rewrite this function with real code
 }
 
 /* 
@@ -340,7 +343,9 @@ rdmsr(u_int msr)
  */
 static void
 _load_cr0(unsigned long val) {
+  #if 0
     __asm __volatile("movq %0,%%cr0" : : "r" (val));
+  #endif
 }
 
 /*
@@ -350,30 +355,41 @@ _load_cr0(unsigned long val) {
  *  Load the cr3 with the given value passed in.
  */
 static inline void load_cr3(unsigned long data)
-{ 
+{
+  #if 0
     __asm __volatile("movq %0,%%cr3" : : "r" (data) : "memory"); 
+  #endif
 }
 
 
 static inline u_long
 _rcr0(void) {
     u_long  data;
+    #if 0
     __asm __volatile("movq %%cr0,%0" : "=r" (data));
     return (data);
+    #endif
+    return 0; //TODO
 }
 
 static inline u_long
 _rcr3(void) {
     u_long  data;
+    #if 0
     __asm __volatile("movq %%cr3,%0" : "=r" (data));
     return (data);
+    #endif
+    return 0; //TODO
 }
 
 static inline u_long
 _rcr4(void) {
     u_long  data;
+    #if 0
     __asm __volatile("movq %%cr4,%0" : "=r" (data));
     return (data);
+    #endif
+    return 0;
 }
 
 static inline uint64_t
@@ -607,10 +623,12 @@ protect_paging(void) {
   /* The flag value for enabling page protection */
   const uintptr_t flag = 0x00010000;
   uintptr_t value = 0;
+  #if 0
   __asm__ __volatile ("movq %%cr0,%0\n": "=r" (value));
   value |= flag;
   __asm__ __volatile ("movq %0,%%cr0\n": :"r" (value));
-  return;
+#endif
+  return; //TODO
 }
 
 /*
@@ -626,9 +644,12 @@ unprotect_paging(void) {
   /* The flag value for enabling page protection */
   const uintptr_t flag = 0xfffffffffffeffff;
   uintptr_t value;
+  #if 0
   __asm__ __volatile("movq %%cr0,%0\n": "=r"(value));
   value &= flag;
   __asm__ __volatile("movq %0,%%cr0\n": : "r"(value));
+  #endif
+  //TODO
 }
 
 
