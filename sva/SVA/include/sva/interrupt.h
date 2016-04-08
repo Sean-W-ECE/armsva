@@ -67,30 +67,20 @@ extern void sva_register_old_trap      (int number, void *interrupt);
  *  0  - Disable local processor interrupts
  *  ~0 - Enable local processor interrupts
  */
-static inline void
+static inline unsigned int
 sva_load_lif (unsigned int enable)
 {
+  unsigned int ret;
+  //save the current program status register (would be eflags on x86)
+  __asm__ __volatile__ ("MRS %0, cpsr\n" : "=r" (ret) : : "memory");
+
+  //enable/disable interrupts (IRQ and FIQ)
   if (enable)
     __asm__ __volatile__ ("CPSIE if");
   else
     __asm__ __volatile__ ("CPSID if");
-}
 
-/*
- * Intrinsic: sva_save_status()
- *
- * Description:
- *  Return the CPSR register on ARM CPUs. Used to enable proper return
- *  for FreeBSD interrupt control code.
- */
-static inline unsigned int
-sva_save_status(void)
-{
-  unsigned int ret;
-
-  //ARMv7A ASM to save CPSR register
-  __asm__ __volatile__("mrs %0, cpsr\n" : "=r" (ret) : : "memory");
-
+  //return old value of CPSR
   return ret;
 }
                                                                                 

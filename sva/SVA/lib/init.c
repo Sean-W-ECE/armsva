@@ -83,6 +83,7 @@
 
 #include "sva/config.h"
 #include "sva/state.h"
+#include "sva/interrupt.h"
 
 #include <string.h>
 #include <limits.h>
@@ -134,7 +135,7 @@ struct  gate_descriptor {
   unsigned long gd_type:5;    /* segment type */
   unsigned long gd_dpl:2;   /* segment descriptor priority level */
   unsigned long gd_p:1;   /* segment descriptor present */
-  unsigned long gd_hioffset:48 __attribute__ ((__packed__));  /* gate offset (msb) */
+  unsigned long long gd_hioffset:48 __attribute__ ((__packed__));  /* gate offset (msb) */
   unsigned long sd_xx1:32;
 } __attribute__ ((packed));
 
@@ -329,7 +330,7 @@ init_idt (unsigned int procID) {
   /* Argument to lidt/sidt taken from FreeBSD. */
   static struct region_descriptor {
     unsigned long rd_limit:16;    /* segment extent */
-    unsigned long rd_base :64 __attribute__ ((packed));  /* base address  */
+    unsigned long long rd_base :64 __attribute__ ((packed));  /* base address  */
   } __attribute__ ((packed)) sva_idtreg;
 
   /* Kernel's idea of where the IDT is */
