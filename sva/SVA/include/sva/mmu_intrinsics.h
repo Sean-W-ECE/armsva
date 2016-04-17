@@ -58,6 +58,7 @@
 #ifndef SVA_MMU_INTRINSICS_H
 #define SVA_MMU_INTRINSICS_H
 
+#include <sys/_null.h>
 #include "mmu_types.h"
 
 /*

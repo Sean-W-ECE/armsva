@@ -249,10 +249,10 @@ struct SVAThread {
 
   /* Integer state for this thread for context switching */
   sva_integer_state_t integerState;
-
+#if 0
   /* PML4e used for mapping secure memory */
   pml4e_t secmemPML4e;
-
+#endif
   /* Amount of contiguous, allocated secure memory */
   uintptr_t secmemSize;
 
@@ -264,10 +264,10 @@ struct SVAThread {
 
   /* Flag whether the thread is in use */
   unsigned char used;
-
+#if 0 //no VG
   /* Copy of the thread's private key */
   sva_key_t ghostKey;
-
+#endif
   /* Randomly created identifier */
   uintptr_t rid;
 } __attribute__ ((aligned (16)));
@@ -309,7 +309,7 @@ getCPUState(void) {
    * Use an offset from the GS register to look up the processor CPU state for
    * this processor.
    */
-  struct CPUState * cpustate;
+  struct CPUState * cpustate = 0; //return 0 temporarily
   #if 0
   __asm__ __volatile__ ("movq %%gs:0x260, %0\n" : "=r" (cpustate));
   #endif
@@ -335,14 +335,15 @@ sva_was_privileged (void) {
   /*
    * Get the CPUState for the current processor.
    */
+   #if 0 //remove in ARM port
   struct CPUState * cpup = getCPUState();
-
+	#endif
   /*
    * Get the current interrupt context.  Use inline assembly to prevent
    * the SVA instrumentation from preventing us from reading the data.
    */
-  sva_icontext_t * currentIC;
-  #if 0
+   #if 0
+  sva_icontext_t * currentIC; //set to 0 temporarily
   __asm__ __volatile__ ("movq %1, %0\n"
                        : "=r" (currentIC)
                        : "m" ((cpup->newCurrentIC)));
@@ -350,7 +351,7 @@ sva_was_privileged (void) {
   /*
    * Get the code segment out of the interrupt context.
    */
-  uintptr_t cs;
+  uintptr_t cs = 0; //temp set to 0
   #if 0
   __asm__ __volatile__ ("movq %1, %0\n"
                        : "=r" (cs)
@@ -361,11 +362,11 @@ sva_was_privileged (void) {
    * if it's code segment has the user-mode segment bits turned on.  Apparently
    * all FreeBSD user-space code segments have 3 as the last digit.
    */
-  return (!(cs & userCodeSegmentMask));
+  return (!(cs & userCodeSegmentMask)); //TODO
 }
 
 extern uintptr_t sva_icontext_getpc (void);
-
+#if 0 //no virtual ghost
 /*
  * FIXME: This is a hack because we don't have invokememcpy() implemented yet.
  */
@@ -376,6 +377,7 @@ hasGhostMemory (void) {
     return 1;
   return 0;
 }
+#endif
 
 #if 0
 /* Prototypes for Execution Engine Functions */

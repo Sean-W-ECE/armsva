@@ -21,7 +21,11 @@
  * ===========================================================================
  */
 
+#if 0
 #include <string.h>
+#endif
+
+#include <machine/asm.h>
 #include <sys/types.h>
 
 #include "sva/config.h"

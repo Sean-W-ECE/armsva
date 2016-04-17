@@ -62,28 +62,58 @@ extern void sva_register_old_trap      (int number, void *interrupt);
  *
  * Description:
  *  Enables or disables local processor interrupts, depending upon the flag.
+ *  Enable is a 2-bit value for ARM port. Value is bit-wise NOT of I and F
+ *  in CPSR
  *
  * Inputs:
- *  0  - Disable local processor interrupts
- *  ~0 - Enable local processor interrupts
+ *  0  - Disable ALL local processor interrupts (CPSR.IF = 11)
+ *  1  - Disable ONLY IRQ on ARM (CPSR.IF = 10)
+ *  2  - Disable ONLY FIQ on ARM (CPSR.IF = 01)
+ *  3  - Enable ALL local processor interrupts (CPSR.IF = 00)
  */
-static inline unsigned int
+static inline uint32_t
 sva_load_lif (unsigned int enable)
 {
-  unsigned int ret;
+  uint32_t ret;
   //save the current program status register (would be eflags on x86)
   __asm__ __volatile__ ("MRS %0, cpsr\n" : "=r" (ret) : : "memory");
-
+  
   //enable/disable interrupts (IRQ and FIQ)
-  if (enable)
-    __asm__ __volatile__ ("CPSIE if");
+  if (enable == 3)
+    __asm__ __volatile__ ("CPSIE if\n" : : : "memory");
+  else if (enable == 2) //enable IRQ, disable FIQ
+    __asm__ __volatile__ ("CPSIE i\n"
+			  "CPSID f\n" : : : "memory");
+  else if (enable == 1) //enable FIQ, disable IRQ
+    __asm__ __volatile__ ("CPSIE f\n"
+			  "CPSID i\n" : : : "memory");
   else
-    __asm__ __volatile__ ("CPSID if");
+    __asm__ __volatile__ ("CPSID if\n" : : : "memory");
 
   //return old value of CPSR
   return ret;
 }
-                                                                                
+
+/*
+ * Intrinsic: sva_set_async_abort()
+ * 
+ * Description:
+ *   ARM-specific function to set the async abort bit in the CPSR
+ *   Handles scenario where enable_interrupts called with A bit
+ * 
+ * Inputs:
+ * 0 - Async Abort disabled (CPSR.A = 1)
+ * 1 - Async Abort enabled (CPSR.A = 0)
+ */
+static inline void
+sva_set_async_abort (unsigned int enable)
+{
+  //set the A flag
+  if(enable)
+    __asm__ __volatile__ ("CPSIE a\n" : : : "memory");
+  else
+    __asm__ __volatile__ ("CPSID a\n" : : : "memory");
+}
 /*
  * Intrinsic: sva_save_lif()
  *
@@ -91,10 +121,10 @@ sva_load_lif (unsigned int enable)
  *  Return whether interrupts are currently enabled or disabled on the
  *  local processor.
  */
-static inline unsigned int
+static inline uint32_t
 sva_save_lif (void)
 {
-  unsigned int eflags;
+  uint32_t eflags;
 
   /*
    * Get the CPSR register and then mask out the IRQ/FIQ disable bits

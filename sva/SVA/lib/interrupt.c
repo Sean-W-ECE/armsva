@@ -13,11 +13,14 @@
  *===----------------------------------------------------------------------===
  */
 
-#include "sva/callbacks.h"
-#include "sva/config.h"
 #include "sva/interrupt.h"
-#include "sva/state.h"
+#include "sva/config.h"
+#include "sva/callbacks.h"
+
+#if 0
 #include "sva/keys.h"
+#include "sva/state.h"
+#endif
 
 /* Debug flags for printing data */
 #define DEBUG       0
@@ -35,6 +38,9 @@ extern void * interrupt_table[256];
  * Default LLVA interrupt, exception, and system call handlers.
  */
 void
+default_interrupt (unsigned int number, uintptr_t address);
+
+void
 default_interrupt (unsigned int number, uintptr_t address) {
 #if 1
   printf ("SVA: default interrupt handler: %d %d\n", number, address);
@@ -45,6 +51,8 @@ default_interrupt (unsigned int number, uintptr_t address) {
   return;
 }
 
+#if 0 //removed due to missing sva_print_icontext function
+void invalidIC(unsigned int v);
 void
 invalidIC (unsigned int v) {
   extern void assertGoodIC (void);
@@ -63,8 +71,10 @@ invalidIC (unsigned int v) {
 
   panic ("SVA: Invalid Interrupt Context\n");
   //removed x86 ASM
+
   return;
 }
+#endif
 
 /*
  * Structure: CPUState
@@ -82,7 +92,9 @@ struct CPUState * CPUState = realCPUState;
 static struct SVAThread realThreads[4096] __attribute__ ((aligned (16)))
 __attribute__ ((section ("svamem")));
 struct SVAThread * Threads = realThreads;
-
+#if 0
+//add function declaration
+void init_threads(void);
 void
 init_threads(void) {
   for (unsigned index = 0; index < 4096; ++index) {
@@ -90,26 +102,34 @@ init_threads(void) {
   }
   return;
 }
-
+#endif
+//remove this section for now
+#if 0
 /*
  * Function: randomNumber()
  *
  * Description:
  *  Use the rdrand instruction to generate a 64-bit random number.
+ *  NOTE: currently broken on ARM port
  */
 static inline uintptr_t
 randomNumber (void) {
-  uintptr_t rand;
+  uintptr_t rand = 0; //init rand to 0 since no x86 ASM
   //removed x86 ASM
   return rand;
 }
+#endif
 
+//No virtualghost, so don't use
+#if 0
 /*
  * Function: findNextFreeThread()
  *
  * Description:
  *  This function returns the index of the next thread which is not in use.
  */
+struct SVAThread * findNextFreeThread (void);
+
 struct SVAThread *
 findNextFreeThread (void) {
   for (unsigned int index = 0; index < 4096; ++index) {
@@ -128,7 +148,7 @@ findNextFreeThread (void) {
       newThread->secmemSize = 0;
       newThread->numPushTargets = 0;
       newThread->secmemPML4e = 0;
-
+      
       /* 
        * This function currently sets the thread secret with a default
        * statically defined key.  However, in the future will obtain said key
@@ -145,7 +165,7 @@ findNextFreeThread (void) {
       if (vg) {
         init_thread_key(newThread);
       }
-
+      
 #if DEBUG
       printf("<<<< SVA: Created new private key: value: %s\n",
               newThread->secret.key); 
@@ -176,7 +196,9 @@ findNextFreeThread (void) {
   panic ("SVA: findNextFreeThread: Exhausted SVA Threads!\n");
   return 0;
 }
+#endif
 
+#if 0 //remove for port
 /*
  * Intrinsic: sva_getCPUState()
  *
@@ -423,3 +445,4 @@ sva_register_interrupt (unsigned char number, interrupt_handler_t interrupt) {
   interrupt_table[number] = interrupt;
   return 0;
 }
+#endif
