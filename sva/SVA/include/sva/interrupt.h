@@ -58,62 +58,81 @@ extern void sva_register_old_trap      (int number, void *interrupt);
 /**************************** Inline Functions *******************************/
 
 /*
+ * DEBUG: copy of set_cpsr for testing only
+ */
+static __inline uint32_t
+sva_set_cpsr(uint32_t bic, uint32_t eor)
+{
+	uint32_t	tmp, ret;
+
+	__asm __volatile(
+		"mrs     %0, cpsr\n"		/* Get the CPSR */
+		"bic	 %1, %0, %2\n"		/* Clear bits */
+		"eor	 %1, %1, %3\n"		/* XOR bits */
+		"msr     cpsr_xc, %1\n"		/* Set the CPSR */
+	: "=&r" (ret), "=&r" (tmp)
+	: "r" (bic), "r" (eor) : "memory");
+
+	return ret;
+}
+
+#define PSR_A 0x00000100
+#define PSR_I 0x00000080
+#define PSR_F 0x00000040
+  
+/*
  * Intrinsic: sva_load_lif()
  *
  * Description:
  *  Enables or disables local processor interrupts, depending upon the flag.
- *  Enable is a 2-bit value for ARM port. Value is bit-wise NOT of I and F
- *  in CPSR
+ *  Enable is a 9-bit value for ARM port. 3 MSB are A,I,F modify status.
+ *  3 LSB are new values for A,I,F.
  *
  * Inputs:
- *  0  - Disable ALL local processor interrupts (CPSR.IF = 11)
- *  1  - Disable ONLY IRQ on ARM (CPSR.IF = 10)
- *  2  - Disable ONLY FIQ on ARM (CPSR.IF = 01)
- *  3  - Enable ALL local processor interrupts (CPSR.IF = 00)
+ *  enable - 9b: [A change][I change][F change][3 unused][new A][new I][new F]
  */
 static inline uint32_t
 sva_load_lif (unsigned int enable)
 {
-  uint32_t ret;
-  //save the current program status register (would be eflags on x86)
-  __asm__ __volatile__ ("MRS %0, cpsr\n" : "=r" (ret) : : "memory");
-  
-  //enable/disable interrupts (IRQ and FIQ)
-  if (enable == 3)
-    __asm__ __volatile__ ("CPSIE if\n" : : : "memory");
-  else if (enable == 2) //enable IRQ, disable FIQ
-    __asm__ __volatile__ ("CPSIE i\n"
-			  "CPSID f\n" : : : "memory");
-  else if (enable == 1) //enable FIQ, disable IRQ
-    __asm__ __volatile__ ("CPSIE f\n"
-			  "CPSID i\n" : : : "memory");
-  else
-    __asm__ __volatile__ ("CPSID if\n" : : : "memory");
+  uint32_t ret, bic, eor, tmp;
 
+  bic = 0;
+  eor = 0;
+  
+  //if [A change] set, read from new A, set bic and eor
+  if((enable & PSR_A) >> 8) {
+    bic |= PSR_A;
+    if((enable & 0x4) >> 2) {
+      eor |= PSR_A;
+    }
+  }
+  //if [I change] set, read from new I, set bic and eor
+  if((enable & PSR_I) >> 7) {
+    bic |= PSR_I;
+    if((enable & 0x2) >> 1) {
+      eor |= PSR_I;
+    }
+  }
+  //if [F change] set, read from new F, set bic and eor
+  if((enable & PSR_F) >> 6) {
+    bic |= PSR_F;
+    if((enable & 0x1)) {
+      eor |= PSR_F;
+    }
+  }
+  //execute assembly
+  __asm __volatile(
+		"mrs     %0, cpsr\n"		/* Get the CPSR */
+		"bic	 %1, %0, %2\n"		/* Clear bits */
+		"eor	 %1, %1, %3\n"		/* XOR bits */
+		"msr     cpsr_xc, %1\n"		/* Set the CPSR */
+	: "=&r" (ret), "=&r" (tmp)
+	: "r" (bic), "r" (eor) : "memory");
+  
   //return old value of CPSR
   return ret;
 }
 
-/*
- * Intrinsic: sva_set_async_abort()
- * 
- * Description:
- *   ARM-specific function to set the async abort bit in the CPSR
- *   Handles scenario where enable_interrupts called with A bit
- * 
- * Inputs:
- * 0 - Async Abort disabled (CPSR.A = 1)
- * 1 - Async Abort enabled (CPSR.A = 0)
- */
-static inline void
-sva_set_async_abort (unsigned int enable)
-{
-  //set the A flag
-  if(enable)
-    __asm__ __volatile__ ("CPSIE a\n" : : : "memory");
-  else
-    __asm__ __volatile__ ("CPSID a\n" : : : "memory");
-}
 /*
  * Intrinsic: sva_save_lif()
  *
