@@ -177,6 +177,19 @@ SVAbadtrap:
  *  o The error code and trap number should have been pushed on to the stack. 
  */
 Trap:
+	/* ARM code copied from sys/arm/arm/exception.S */
+	/* This is from PUSHFRAME */
+	sub	sp, sp, #4;	/* Align the stack */
+	str	lr, [sp, #-4];	/* Push return address */
+	sub	sp, sp, #(4*17);/* Adjust the stack pointer */
+	stmia	sp, {r0-r12};	/* Push user mode registers */
+	add	r0, sp, #(4*13);/* Adjust the stack pointer */
+	stmia	r0, {r13-r14}^;	/* Push more user mode registers */
+	mov	r0, r0;		/* NOP for previous instruction */
+	mrs	r0, spsr;	/* Put the SPSR on the stack */
+	str	r0, [sp, #-4]!;	
+	
+#if 0 //remove for ARM port
   /*
    * Switch to the stack segment.
    */
@@ -281,50 +294,6 @@ Trap:
   cmovneq IC_RSP(%rsp), %rsp
 
   /*
-   * Zero out live registers that could be spilled to the stack.  Without
-   * memory safety, we can't guarantee that they're safe.
-   */
-#ifdef VG
-  xorq %r15, %r15
-  xorq %r14, %r14
-  xorq %r13, %r13
-  xorq %r12, %r12
-  xorq %r11, %r11
-  xorq %r10, %r10
-  xorq %r9,  %r9
-  xorq %r8,  %r8
-  xorq %rdx, %rdx
-  xorq %rcx, %rcx
-
-  finit
-  pxor %mm0,  %mm0
-  pxor %mm1,  %mm1
-  pxor %mm2,  %mm2
-  pxor %mm3,  %mm3
-  pxor %mm4,  %mm4
-  pxor %mm5,  %mm5
-  pxor %mm6,  %mm6
-  pxor %mm7,  %mm7
-
-  pxor %xmm0,  %xmm0
-  pxor %xmm1,  %xmm1
-  pxor %xmm2,  %xmm2
-  pxor %xmm3,  %xmm3
-  pxor %xmm4,  %xmm4
-  pxor %xmm5,  %xmm5
-  pxor %xmm6,  %xmm6
-  pxor %xmm7,  %xmm7
-  pxor %xmm8,  %xmm8
-  pxor %xmm9,  %xmm9
-  pxor %xmm10, %xmm10
-  pxor %xmm11, %xmm11
-  pxor %xmm12, %xmm12
-  pxor %xmm13, %xmm13
-  pxor %xmm14, %xmm14
-  pxor %xmm15, %xmm15
-#endif
-
-  /*
    * Call the trap handler registered by the OS for this trap.
    */
   movq $interrupt_table, %rax
@@ -404,7 +373,8 @@ Trap:
 
   /* We came from user mode.  First switch to the kernel %GS register. */
   swapgs
-
+#endif
+	
 1:
   /*
    * Return to the calling code.  On x86_64, this will restore the stack

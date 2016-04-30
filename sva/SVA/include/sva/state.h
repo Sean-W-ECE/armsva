@@ -51,12 +51,14 @@ typedef struct {
  */
 struct invoke_frame {
   /* Callee saved registers */
-  uintptr_t rbp;
-  uintptr_t rbx;
-  uintptr_t r12;
-  uintptr_t r13;
-  uintptr_t r14;
-  uintptr_t r15;
+  uintptr_t r4;
+  uintptr_t r5;
+  uintptr_t r6;
+  uintptr_t r7;
+  uintptr_t r8;
+  uintptr_t r9;
+  uintptr_t r10;
+  uintptr_t r11;
 
   /* Pointer to the next invoke frame in the list */
   struct invoke_frame * next;
@@ -87,48 +89,31 @@ typedef struct sva_icontext {
   /* Invoke Pointer */
   void * invokep;                     // 0x00
 
-  /* Segment selector registers */
-  unsigned short fs;                  // 0x08
-  unsigned short gs;
-  unsigned short es;
-  unsigned short ds;
+  /* save all 13 GPRs plus SP, LP, PC */
 
-  unsigned long rdi;                  // 0x10
-  unsigned long rsi;                  // 0x18
+  uint32_t r0;
+  uint32_t r1;
+  uint32_t r2;
+  uint32_t r3;
+  uint32_t r4;                  // 0x20
+  uint32_t r5;                  // 0x28
+  uint32_t r6;                  // 0x30
+  uint32_t r7;                  // 0x38
 
-  unsigned long rax;                  // 0x20
-  unsigned long rbx;                  // 0x28
-  unsigned long rcx;                  // 0x30
-  unsigned long rdx;                  // 0x38
-
-  unsigned long r8;                   // 0x40
-  unsigned long r9;                   // 0x48
-  unsigned long r10;                  // 0x50
-  unsigned long r11;                  // 0x58
-  unsigned long r12;                  // 0x60
-  unsigned long r13;                  // 0x68
-  unsigned long r14;                  // 0x70
-  unsigned long r15;                  // 0x78
-
-  /*
-   * Keep this register right here.  We'll use it in assembly code, and we
-   * place it here for easy saving and recovery.
-   */
-  unsigned long rbp;                  // 0x80
+  uint32_t r8;                   // 0x40
+  uint32_t r9;                   // 0x48
+  uint32_t r10;                  // 0x50
+  uint32_t r11;                  // 0x58
+  uint32_t r12;                  // 0x60
+  uint32_t r13;                  // 0x68 - stack pointer
+  uint32_t r14;                  // 0x70 - link pointer
+  uint32_t r15;                  // 0x78 - program counter
 
   /* Hardware trap number */
   unsigned long trapno;               // 0x88
 
-  /*
-   * These values are automagically saved by the x86_64 hardware upon an
-   * interrupt or exception.
-   */
-  unsigned long code;                 // 0x90
-  unsigned long rip;                  // 0x98
-  unsigned long cs;                   // 0xa0
-  unsigned long rflags;               // 0xa8
-  unsigned long * rsp;                // 0xb0
-  unsigned long ss;                   // 0xb8
+  /* ARM registers */
+  uint32_t spsr; //store the SPSR
 
   /* Flags whether the interrupt context is valid */
   unsigned long valid;                // 0xc0
@@ -149,66 +134,41 @@ typedef struct {
   /* Invoke Pointer */
   void * invokep;                     // 0x00
 
-  /* Segment selector registers */
-  unsigned short fs;                  // 0x08
-  unsigned short gs;
-  unsigned short es;
-  unsigned short ds;
+  /* save all 13 GPRs plus SP, LP, PC */
 
-  unsigned long rdi;                  // 0x10
-  unsigned long rsi;                  // 0x18
+  uint32_t r0;
+  uint32_t r1;
+  uint32_t r2;
+  uint32_t r3;
+  uint32_t r4;                  // 0x20
+  uint32_t r5;                  // 0x28
+  uint32_t r6;                  // 0x30
+  uint32_t r7;                  // 0x38
 
-  unsigned long rax;                  // 0x20
-  unsigned long rbx;                  // 0x28
-  unsigned long rcx;                  // 0x30
-  unsigned long rdx;                  // 0x38
-
-  unsigned long r8;                   // 0x40
-  unsigned long r9;                   // 0x48
-  unsigned long r10;                  // 0x50
-  unsigned long r11;                  // 0x58
-  unsigned long r12;                  // 0x60
-  unsigned long r13;                  // 0x68
-  unsigned long r14;                  // 0x70
-  unsigned long r15;                  // 0x78
-
-  /*
-   * Keep this register right here.  We'll use it in assembly code, and we
-   * place it here for easy saving and recovery.
-   */
-  unsigned long rbp;                  // 0x80
+  uint32_t r8;                   // 0x40
+  uint32_t r9;                   // 0x48
+  uint32_t r10;                  // 0x50
+  uint32_t r11;                  // 0x58
+  uint32_t r12;                  // 0x60
+  uint32_t r13;                  // 0x68 - stack pointer
+  uint32_t r14;                  // 0x70 - link pointer
+  uint32_t r15;                  // 0x78 - program counter
 
   /* Hardware trap number */
   unsigned long trapno;               // 0x88
 
-  /*
-   * These values are automagically saved by the x86_64 hardware upon an
-   * interrupt or exception.
-   */
-  unsigned long code;                 // 0x90
-  unsigned long rip;                  // 0x98
-  unsigned long cs;                   // 0xa0
-  unsigned long rflags;               // 0xa8
-  unsigned long * rsp;                // 0xb0
-  unsigned long ss;                   // 0xb8
+  /* ARM registers */
+  uint32_t spsr; //store the SPSR
+
 
   /* Flag for whether the integer state is valid */
   unsigned long valid;                // 0xc0
 
-  /* Store another RIP value for the second return */
-  unsigned long hackRIP;              // 0xc8
-
   /* Kernel stack pointer */
   unsigned long kstackp;              // 0xd0
 
-  /* CR3 register */
-  unsigned long cr3;                  // 0xd8
-
   /* Current interrupt context location */
   sva_icontext_t * currentIC;         // 0xe0
-
-  /* Current setting of IST3 in the TSS */
-  unsigned long ist3;                // 0xe8
 
   /* Floating point state */
   sva_fp_state_t fpstate;            // 0xf0
