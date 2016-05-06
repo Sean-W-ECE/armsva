@@ -57,25 +57,6 @@ extern void sva_register_old_trap      (int number, void *interrupt);
 
 /**************************** Inline Functions *******************************/
 
-/*
- * DEBUG: copy of set_cpsr for testing only
- */
-static __inline uint32_t
-sva_set_cpsr(uint32_t bic, uint32_t eor)
-{
-	uint32_t	tmp, ret;
-
-	__asm __volatile(
-		"mrs     %0, cpsr\n"		/* Get the CPSR */
-		"bic	 %1, %0, %2\n"		/* Clear bits */
-		"eor	 %1, %1, %3\n"		/* XOR bits */
-		"msr     cpsr_xc, %1\n"		/* Set the CPSR */
-	: "=&r" (ret), "=&r" (tmp)
-	: "r" (bic), "r" (eor) : "memory");
-
-	return ret;
-}
-
 #define PSR_A 0x00000100
 #define PSR_I 0x00000080
 #define PSR_F 0x00000040
@@ -95,6 +76,11 @@ static inline uint32_t
 sva_load_lif (unsigned int enable)
 {
   uint32_t ret, bic, eor, tmp;
+  /* Variable descriptions:
+     ret : return value (old CPSR)
+     bic : bits to modify in CPSR
+     eor : new values for bic bits
+     tmp : temporary variable */
 
   bic = 0;
   eor = 0;
@@ -121,6 +107,7 @@ sva_load_lif (unsigned int enable)
     }
   }
   //execute assembly
+  //Assembly copied from FreeBSD __set_cpsr() in arm/include/cpufunc.h
   __asm __volatile(
 		"mrs     %0, cpsr\n"		/* Get the CPSR */
 		"bic	 %1, %0, %2\n"		/* Clear bits */
