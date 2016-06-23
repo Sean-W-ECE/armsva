@@ -68,9 +68,24 @@ extern void sva_register_old_trap      (int number, void *interrupt);
  *  Enables or disables local processor interrupts, depending upon the flag.
  *  Enable is a 9-bit value for ARM port. 3 MSB are A,I,F modify status.
  *  3 LSB are new values for A,I,F.
+ *  Also returns old interrupt state for interoperability with FreeBSD ARM
+ *
+ * Notes:
+ *  I have not changed the interface of the function with regard to the x86
+ *  version of SVA. x86 FreeBSD does not require a return value for the
+ *  interrupt control function, but ARM does.
  *
  * Inputs:
- *  enable - 9b: [A change][I change][F change][3 unused][new A][new I][new F]
+ *  unsigned int enable - 9 bit value: 
+ *    [A change][I change][F change][3 bits unused][new A][new I][new F]
+ *
+ * Outputs:
+ *  Local processor interrupt bits are set to the values in the 3 LSB of enable
+ *  The previous state of the local processor interrupt bits is returned to
+ *  the caller.
+ *
+ * Return values:
+ *  uint32_t ret - Old value of the processor flags register (CPSR on ARM)
  */
 static inline uint32_t
 sva_load_lif (unsigned int enable)
@@ -126,6 +141,10 @@ sva_load_lif (unsigned int enable)
  * Description:
  *  Return whether interrupts are currently enabled or disabled on the
  *  local processor.
+ *
+ * Return values:
+ *  eflags - uint32_t with the 2 LSB set to the values of the I and F bits 
+ *  in the CPSR
  */
 static inline uint32_t
 sva_save_lif (void)
